@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Finder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+</head>
+<body>
+    <h1>Restaurant Finder</h1>
+    <button id="findRestaurants">Find Nearby Restaurants</button>
+    <div id="results"></div>
+    <script>
+        document.getElementById('findRestaurants').addEventListener('click', function() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    
+                    // Send coordinates to backend
+                    axios.get('/api/restaurants', {
+                        params: {
+                            latitude: latitude,
+                            longitude: longitude
+                        }
+                    })
+                    .then(function (response) {
+                        // Display results
+                        const resultsDiv = document.getElementById('results');
+                        resultsDiv.innerHTML = '<h2>Nearby Restaurants:</h2>';
+                        response.data.forEach(restaurant => {
+                            resultsDiv.innerHTML += `
+                                <div>
+                                    <h3>${restaurant.name}</h3>
+                                    <p>Address: ${restaurant.address}</p>
+                                    <p>Website: ${restaurant.website || 'N/A'}</p>
+                                    <p>Distance: ${restaurant.distance.toFixed(2)} meters</p>
+                                    <p>Analysis: ${restaurant.analysis || 'No analysis available'}</p>
+                                </div>
+                                <hr>
+                            `;
+                        });
+                    })
+                    .catch(function (error) {
+                        console.error('Error:', error);
+                        document.getElementById('results').innerHTML = 'An error occurred while fetching restaurants.';
+                    });
+                }, function(error) {
+                    console.error("Error: " + error.message);
+                    document.getElementById('results').innerHTML = 'Unable to retrieve your location.';
+                });
+            } else {
+                document.getElementById('results').innerHTML = 'Geolocation is not supported by your browser.';
+            }
+        });
+    </script>
+</body>
+</html>
